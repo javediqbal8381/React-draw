@@ -1,94 +1,121 @@
-import Konva from 'konva';
-import { useState } from 'react';
-import { Stage, Layer, Text, Rect, Circle } from 'react-konva'
+import React, { useState } from "react";
+import Konva from "konva";
+
+import { Stage, Layer, Rect, Text } from "react-konva";
 
 function App() {
-  const [inprog, setInprog] = useState({})
-  const [rects, setRects] = useState([])
-  const [isDrawing, setIsDrawing] = useState(false)
-  function handleMouseDown(e) {
-    setIsDrawing(true)
-    const shape = new Konva.Rect({
-      x: e.target.getStage().getPointerPosition().x,
-      y: e.target.getStage().getPointerPosition().y,
-      width: 20,
-      height: 20,
-      fill: "red",
-      stroke: "red"
-    })
-    setInprog(shape)
-  }
-  function handleMouseMove(e) {
-    if (!isDrawing) { setIsDrawing(false) }
-    if (inprog.attrs) {
-      const width = e.target.getStage().getPointerPosition().x - inprog.attrs.x
-      const height = e.target.getStage().getPointerPosition().y - inprog.attrs.y
-      const shape = new Konva.Rect({
-        x: inprog.attrs.x,
-        y: inprog.attrs.y,
-        width: width,
-        height: height,
-        fill: "red",
-        stroke: "red"
+  const [textEditVisible, setTextEditVisible] = useState(false)
+  const [textX, setTextX] = useState(0)
+  const [textY, setTextY] = useState(0)
+  const [textValue, setTextValue] = useState('')
+  const [flag, setFlag] = useState(false)
+  const [texts, setTexts] = useState([])
+
+
+  const handleTextareaKeyDown = e => {
+    if (e.keyCode === 13 && e.target.value !== '') {
+      setTextEditVisible(false)
+      const newText = new Konva.Text({
+        text: textValue,
+        x: textX + 10,
+        y: textY - 15,
       })
-      setInprog(shape)
-      console.log(width)
+      setTexts([...texts, newText])
+      setFlag(false)
+
+    }
+  };
+
+  const handleTextEdit = (e) => {
+    setTextValue(e.target.value)
+
+  };
+
+  const handleTextDblClick = (e) => {
+    const absPos = e.target.getAbsolutePosition();
+    setTextEditVisible(true)
+    setTextX(absPos.x)
+    setTextY(absPos.y)
+  };
+
+  function handleMouseDown(e) {
+    if (flag) {
+      const absPos = e.target.getStage().getPointerPosition()
+      handleTextDblClick(e)
+      setTextEditVisible(true)
+      setTextX(absPos.x)
+      setTextY(absPos.y)
+
     }
   }
-
-  function handleMouseUp(e) {
-    setIsDrawing(false)
-    setRects([...rects, inprog])
-    setInprog({})
-    console.log(rects);
+  function flagbtn() {
+    setFlag(true)
+    setTextValue('')
   }
+
   return (
     <div>
-      app working
+      <button onClick={flagbtn} >click</button>
+      <button onClick={() => { setTexts({}) }} >Delete</button>
       <Stage
-        width={window.innerWidth} height={window.innerHeight}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
-      >
+        onClick={handleMouseDown}
+        width={window.innerWidth} height={window.innerHeight}>
         <Layer>
-
-          {rects.length > 0 &&
-            <>
-              {
-                rects.map((rect, i) => {
-                  return (
-
-                    <Rect
-                      key={i}
-                      x={rect.attrs.x}
-                      y={rect.attrs.y}
-                      width={rect.attrs.width}
-                      height={rect.attrs.height}
-                      fill="red"
-                      opacity={0.2}
-                      stroke='red'
-                      shadowBlur={10}
-                      draggable
-
-                    />
-
-                  )
-
-                }
-                )
-              }
-
-            </>
-
-          }
-
-
+          {/* <Text
+            fontSize={20}
+            align={"left"}
+            fontStyle={20}
+            draggable
+            text={textValue}
+            x={pointer.x - 20}
+            y={pointer.y - 10}
+            wrap="word"
+            width={400}
+            onClick={e => handleTextDblClick(e)}
+          /> */}
+          {console.log(texts)}
+          {texts.length > 0 && texts.map((t, i) => {
+            console.log(t.attrs.x)
+            return (
+              <Text
+                key={i}
+                fontSize={20}
+                align={"left"}
+                fontStyle={20}
+                draggable
+                text={t.attrs.text}
+                x={t.attrs.x}
+                y={t.attrs.y}
+                wrap="word"
+                width={400}
+                onClick={e => handleTextDblClick(e)}
+              />
+            )
+          })}
         </Layer>
       </Stage>
-
+      <textarea
+        value={textValue}
+        style={{
+          color: 'black',
+          fontSize: '20px',
+          background: 'transparent',
+          overflow: 'hidden',
+          scrollbar: 'none',
+          outline: 'none',
+          border: 'none',
+          scrollbarColor: 'none',
+          display: textEditVisible ? "block" : "none",
+          position: "absolute",
+          top: textY + 10 + "px",
+          left: textX - 15 + "px"
+        }}
+        onChange={e => handleTextEdit(e)}
+        onKeyDown={e => handleTextareaKeyDown(e)}
+      />
     </div>
   );
+
 }
 
-export default App;
+export default App
